@@ -29,11 +29,11 @@ class HomePageState extends State<HomePage> {
             //   ),
             //   Container(
             //     alignment: Alignment.topLeft,
-            //     child: Text("DEC:"),
+            //     child: Text("DEC:", style: TextStyle(fontFamily: "Roboto Mono"),),
             //   ),
             //   Container(
             //     alignment: Alignment.topLeft,
-            //     child: Text("HEX:"),
+            //     child: Text("HEX:", style: TextStyle(fontFamily: "Roboto Mono"),),
             //   ),
             // ],),
             // ),
@@ -41,7 +41,7 @@ class HomePageState extends State<HomePage> {
               child: Container(
                 alignment: Alignment.bottomRight,
                 height: screen.height*.23,
-                child: Text('$disp', 
+                child: Text('$disp',//int.parse(disp).toRadixString(radix), 
                   style: TextStyle(fontSize: 50),
                 ),
               ),
@@ -57,62 +57,62 @@ class HomePageState extends State<HomePage> {
             button("D", _number),
             button("E", _number),
             button("F", _number),
-            button("&", null),
-            button("%", null),
+            button("&", _oper),
+            button("%", _oper),
           ],),
           Row(children: <Widget>[
             button("A", _number),
             button("B", _number),
             button("C", _number),
-            button("|", null),
-            button("÷", null),
+            button("|", _oper),
+            button("÷", _oper),
           ],),
           Row(children: <Widget>[
             button("7", _number),
             button("8", _number),
             button("9", _number),
-            button("^", null),
-            button("*", null),
+            button("^", _oper),
+            button("*", _oper),
           ],),
           Row(children: <Widget>[
             button("4", _number),
             button("5", _number),
             button("6", _number),
             button("~", _unary),
-            button("-", null),
+            button("-", _oper),
           ],),
           Row(children: <Widget>[
             button("1", _number),
             button("2", _number),
             button("3", _number),
             button("++", _unary),
-            button("+", null),
+            button("+", _oper),
           ],),
           Row(children: <Widget>[
             //button("⚙", null),
             button("0", _number),
             button("DEL", _delete),
-            button("=", null),
+            button("=", _equal),
           ],),
         ],)
       ),
     );
   }
 
-  Widget button(String number, Function(String number) f) {
+  Widget button(String str, Function(String number) f) {
     RegExp expD = new RegExp("^[A-F]\$"), expB = new RegExp("^[2-9A-F]\$");
     return MaterialButton( 
       height: screen.height * .11,
-      minWidth: long.contains(number) ? screen.width/5 * 2 : screen.width/5,
-      color: bColors.containsKey(number) ? bColors[number] : main(),
-      textColor: offC.contains(number) ? main() : text(),
+      minWidth: long.contains(str) ? screen.width/5 * 2 : screen.width/5,
+      color: bColors.containsKey(str) ? bColors[str] : main(),
+      textColor: offC.contains(str) ? main() : text(),
       disabledColor: Colors.grey[800],
       disabledTextColor: Colors.grey[700],
       shape: BeveledRectangleBorder(side: BorderSide(width: .25)),
-      child: Text(number,
+      child: Text(str,
         style: TextStyle(fontFamily: "Roboto", fontWeight: FontWeight.normal, fontSize: 24),
       ),
-      onPressed: mode == "DEC" && expD.hasMatch(number) ? null : mode == "BIN" && expB.hasMatch(number) ? null : () => f(number),
+      onPressed: mode == "DEC" && expD.hasMatch(str) ? null : mode == "BIN" && expB.hasMatch(str) ? null : () => f(str),
     );
   }
 
@@ -133,9 +133,16 @@ class HomePageState extends State<HomePage> {
       });
   }
   _mode(String s) {
+    var tmp = int.parse(disp.toLowerCase(), radix: radix);
+    switch(s) {
+      case "BIN": radix = 2; break;
+      case "DEC": radix = 10; break;
+      case "HEX": radix = 16; break;
+    }
     setState(() {
+      disp = tmp.toRadixString(radix).toUpperCase();
       bColors[mode] = main();
-      bColors[s] = third();
+      bColors[s] = fourth();
     });
     mode = s;
   }
@@ -144,22 +151,34 @@ class HomePageState extends State<HomePage> {
       setState(() {
         disp = s; 
       });
-    else 
+    else {
       setState(() {
-        disp += s; 
+        disp += s;
       });
+    }
   }
   _unary(String s) {
-    if (s == '~')
+    if (s == '~') {
+      //String tmp = int.parse(s.toLowerCase(), radix: radix).toRadixString(2);
+      // print(tmp);
+      // for (int i = 0; i < tmp.length; ++i) {
+      //   //tmp.allMatches(string)
+      // }
       setState(() {
-        disp = (~int.parse(disp)).toString(); 
+        disp = (~int.parse(int.parse(disp, radix: radix).toRadixString(2))).toString(); 
       });
+    }
     else 
       setState(() {
-        disp = (int.parse(disp)+1).toString(); 
+        disp = (int.parse(disp.toLowerCase(), radix: radix)+1).toRadixString(radix).toUpperCase(); 
       });
   }
   _oper(String s) {
+    setState(() {
+      disp += s; 
+    });
+  }
+  _equal(String s) {
 
   }
 }
