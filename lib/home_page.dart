@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'theme.dart';
 
@@ -11,6 +12,8 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage> {
   String disp = '0', mode = "DEC";
   int res = 0, radix = 10;
+  bool op = false;
+  RegExp expD = RegExp("^[A-F]\$"), expB = RegExp("^[2-9A-F]\$"), ops = RegExp("[&|^~%÷*-+]");
   @override 
   Widget build(BuildContext context) {
     screen = MediaQuery.of(context).size;
@@ -89,7 +92,6 @@ class HomePageState extends State<HomePage> {
             button("+", _oper),
           ],),
           Row(children: <Widget>[
-            //button("⚙", null),
             button("0", _number),
             button("DEL", _delete),
             button("=", _equal),
@@ -100,7 +102,6 @@ class HomePageState extends State<HomePage> {
   }
 
   Widget button(String str, Function(String number) f) {
-    RegExp expD = new RegExp("^[A-F]\$"), expB = new RegExp("^[2-9A-F]\$");
     return MaterialButton( 
       height: screen.height * .11,
       minWidth: long.contains(str) ? screen.width/5 * 2 : screen.width/5,
@@ -121,16 +122,13 @@ class HomePageState extends State<HomePage> {
       disp = '0'; 
     });
     res = 0;
+    op = false;
   }
   _delete(String s) {
-    if (disp.length > 1)
-      setState(() {
-        disp = disp.substring(0, disp.length-1);
-      });
-    else 
-      setState(() {
-        disp = '0'; 
-      });
+    setState(() {
+      disp = disp.length > 1 ? disp.substring(0, disp.length-1) : '0';
+    });
+    op = !ops.hasMatch(disp[disp.length-1]);
   }
   _mode(String s) {
     var tmp = int.parse(disp.toLowerCase(), radix: radix);
@@ -147,6 +145,7 @@ class HomePageState extends State<HomePage> {
     mode = s;
   }
   _number(String s) {
+    op = false;
     if (disp == '0')
       setState(() {
         disp = s; 
@@ -159,26 +158,73 @@ class HomePageState extends State<HomePage> {
   }
   _unary(String s) {
     if (s == '~') {
-      //String tmp = int.parse(s.toLowerCase(), radix: radix).toRadixString(2);
-      // print(tmp);
-      // for (int i = 0; i < tmp.length; ++i) {
-      //   //tmp.allMatches(string)
-      // }
+      String tmp = '';
+      disp = int.parse(disp, radix: radix).toRadixString(2);
+      for (int i = 0; i < disp.length; i++) {
+        tmp += (disp[i] == '1') ? '0' : '1';
+      }
       setState(() {
-        disp = (~int.parse(int.parse(disp, radix: radix).toRadixString(2))).toString(); 
+        disp = tmp; 
       });
     }
-    else 
+    else if (s == "++") 
       setState(() {
         disp = (int.parse(disp.toLowerCase(), radix: radix)+1).toRadixString(radix).toUpperCase(); 
       });
   }
   _oper(String s) {
+    if (disp == '0') {
+      disp += '0';
+    }
+    if (op)
+      disp = disp.substring(0, disp.length-1);
     setState(() {
       disp += s; 
     });
+    op = true;
   }
   _equal(String s) {
+    RegExp exp = RegExp("[0-9A-F]*");
+    Queue<int> operand = Queue<int>();
+    Queue<String> operate = Queue<String>();
+    Map<String, int> pre = {'*':1, '÷':1, '%':1, '+':2, '-':2};
 
+    bool m = true;
+    while (disp.length > 0) {
+      if (m && exp.hasMatch(disp)) {
+        m = !m;
+        operand.addLast(int.parse(exp.stringMatch(disp), radix: radix));
+        disp = disp.replaceFirst(exp, '');
+      }
+      else if (!m && ops.hasMatch(disp)) {
+        m = !m;
+        String thisop = ops.stringMatch(disp);
+        while (operate.isNotEmpty && pre[operate.last] < pre[thisop]) {
+          int y = operand.removeLast(), x = operand.removeLast();
+          operand.addLast(eval(x,y,operate.removeLast()));
+        }
+        operate.addLast(thisop);
+        disp = disp.replaceFirst(ops, '');
+      }
+    }
+    while (operate.isNotEmpty) {
+      var o = operate.removeLast();
+      int y = operand.removeLast(), x = operand.removeLast();
+      operand.addLast(eval(x, y, o));
+    }
+    setState(() {
+      disp = operand.removeLast().toRadixString(radix).toUpperCase(); 
+    });
   }
+}
+
+int eval(int x, int y, String op) {
+  switch (op) {
+    case '%': return x%y;
+    case '÷': return x~/y;
+    case '*': return x*y;
+    case '-': return x-y; 
+    case '+': return x+y;
+  }
+  throw new FormatException();
 }
