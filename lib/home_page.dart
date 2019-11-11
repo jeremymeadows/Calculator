@@ -11,9 +11,9 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   String disp = '0', mode = "DEC";
-  int res = 0, radix = 10;
+  int radix = 10;
   bool op = false;
-  RegExp expD = RegExp("^[A-F]\$"), expB = RegExp("^[2-9A-F]\$"), ops = RegExp("[&|^~%÷*-+]");
+  RegExp expD = RegExp("^[A-F]\$"), expB = RegExp("^[2-9A-F]\$"), ops = RegExp("[&|^~%÷*+-]");
   @override 
   Widget build(BuildContext context) {
     screen = MediaQuery.of(context).size;
@@ -44,7 +44,7 @@ class HomePageState extends State<HomePage> {
               child: Container(
                 alignment: Alignment.bottomRight,
                 height: screen.height*.23,
-                child: Text('$disp',//int.parse(disp).toRadixString(radix), 
+                child: Text('$disp',//BigInt.parse(disp).toRadixString(radix), 
                   style: TextStyle(fontSize: 50),
                 ),
               ),
@@ -121,7 +121,6 @@ class HomePageState extends State<HomePage> {
     setState(() {
       disp = '0'; 
     });
-    res = 0;
     op = false;
   }
   _delete(String s) {
@@ -131,7 +130,7 @@ class HomePageState extends State<HomePage> {
     op = !ops.hasMatch(disp[disp.length-1]);
   }
   _mode(String s) {
-    var tmp = int.parse(disp.toLowerCase(), radix: radix);
+    var tmp = BigInt.parse(disp.toLowerCase(), radix: radix);
     switch(s) {
       case "BIN": radix = 2; break;
       case "DEC": radix = 10; break;
@@ -159,8 +158,8 @@ class HomePageState extends State<HomePage> {
   _unary(String s) {
     if (s == '~') {
       String tmp = '';
-      disp = int.parse(disp, radix: radix).toRadixString(2);
-      for (int i = 0; i < disp.length; i++) {
+      disp = BigInt.parse(disp, radix: radix).toRadixString(2);
+      for (int i = 0; i < disp.length; ++i) {
         tmp += (disp[i] == '1') ? '0' : '1';
       }
       setState(() {
@@ -169,7 +168,7 @@ class HomePageState extends State<HomePage> {
     }
     else if (s == "++") 
       setState(() {
-        disp = (int.parse(disp.toLowerCase(), radix: radix)+1).toRadixString(radix).toUpperCase(); 
+        disp = (BigInt.parse(disp.toLowerCase(), radix: radix)+BigInt.one).toRadixString(radix).toUpperCase(); 
       });
   }
   _oper(String s) {
@@ -185,7 +184,7 @@ class HomePageState extends State<HomePage> {
   }
   _equal(String s) {
     RegExp exp = RegExp("[0-9A-F]*");
-    Queue<int> operand = Queue<int>();
+    Queue<BigInt> operand = Queue<BigInt>();
     Queue<String> operate = Queue<String>();
     Map<String, int> pre = {'*':1, '÷':1, '%':1, '+':2, '-':2};
 
@@ -193,14 +192,14 @@ class HomePageState extends State<HomePage> {
     while (disp.length > 0) {
       if (m && exp.hasMatch(disp)) {
         m = !m;
-        operand.addLast(int.parse(exp.stringMatch(disp), radix: radix));
+        operand.addLast(BigInt.parse(exp.stringMatch(disp), radix: radix));
         disp = disp.replaceFirst(exp, '');
       }
       else if (!m && ops.hasMatch(disp)) {
         m = !m;
         String thisop = ops.stringMatch(disp);
         while (operate.isNotEmpty && pre[operate.last] < pre[thisop]) {
-          int y = operand.removeLast(), x = operand.removeLast();
+          BigInt y = operand.removeLast(), x = operand.removeLast();
           operand.addLast(eval(x,y,operate.removeLast()));
         }
         operate.addLast(thisop);
@@ -209,7 +208,7 @@ class HomePageState extends State<HomePage> {
     }
     while (operate.isNotEmpty) {
       var o = operate.removeLast();
-      int y = operand.removeLast(), x = operand.removeLast();
+      BigInt y = operand.removeLast(), x = operand.removeLast();
       operand.addLast(eval(x, y, o));
     }
     setState(() {
@@ -218,7 +217,7 @@ class HomePageState extends State<HomePage> {
   }
 }
 
-int eval(int x, int y, String op) {
+BigInt eval(BigInt x, BigInt y, String op) {
   switch (op) {
     case '%': return x%y;
     case '÷': return x~/y;
