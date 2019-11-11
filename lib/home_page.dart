@@ -10,6 +10,7 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   String disp = '0', mode = "DEC";
+  int res = 0, radix = 10;
   @override 
   Widget build(BuildContext context) {
     screen = MediaQuery.of(context).size;
@@ -47,50 +48,50 @@ class HomePageState extends State<HomePage> {
             ),
           ],),
           Row(children: <Widget>[
-            button("BIN", null),
-            button("DEC", null),
-            button("HEX", null),
+            button("BIN", _mode),
+            button("DEC", _mode),
+            button("HEX", _mode),
             button("CLR", _clear),
           ],),
           Row(children: <Widget>[
-            button("D", null),
-            button("E", null),
-            button("F", null),
+            button("D", _number),
+            button("E", _number),
+            button("F", _number),
             button("&", null),
             button("%", null),
           ],),
           Row(children: <Widget>[
-            button("A", null),
-            button("B", null),
-            button("C", null),
+            button("A", _number),
+            button("B", _number),
+            button("C", _number),
             button("|", null),
             button("÷", null),
           ],),
           Row(children: <Widget>[
-            button("7", null),
-            button("8", null),
-            button("9", null),
+            button("7", _number),
+            button("8", _number),
+            button("9", _number),
             button("^", null),
             button("*", null),
           ],),
           Row(children: <Widget>[
-            button("4", null),
-            button("5", null),
-            button("6", null),
-            button("~", null),
+            button("4", _number),
+            button("5", _number),
+            button("6", _number),
+            button("~", _unary),
             button("-", null),
           ],),
           Row(children: <Widget>[
-            button("1", null),
-            button("2", null),
-            button("3", null),
-            button("++", null),
+            button("1", _number),
+            button("2", _number),
+            button("3", _number),
+            button("++", _unary),
             button("+", null),
           ],),
           Row(children: <Widget>[
             //button("⚙", null),
-            button("0", null),
-            button("DEL", null),
+            button("0", _number),
+            button("DEL", _delete),
             button("=", null),
           ],),
         ],)
@@ -99,20 +100,66 @@ class HomePageState extends State<HomePage> {
   }
 
   Widget button(String number, Function(String number) f) {
+    RegExp expD = new RegExp("^[A-F]\$"), expB = new RegExp("^[2-9A-F]\$");
     return MaterialButton( 
       height: screen.height * .11,
       minWidth: long.contains(number) ? screen.width/5 * 2 : screen.width/5,
-      color: secondC.contains(number) ? CalcTheme.second() : offC.contains(number) ? CalcTheme.off() : CalcTheme.main(),
-      textColor: offC.contains(number) ? CalcTheme.main() : CalcTheme.text(),
+      color: bColors.containsKey(number) ? bColors[number] : main(),
+      textColor: offC.contains(number) ? main() : text(),
+      disabledColor: Colors.grey[800],
+      disabledTextColor: Colors.grey[700],
       shape: BeveledRectangleBorder(side: BorderSide(width: .25)),
       child: Text(number,
         style: TextStyle(fontFamily: "Roboto", fontWeight: FontWeight.normal, fontSize: 24),
       ),
-      onPressed: (){},
+      onPressed: mode == "DEC" && expD.hasMatch(number) ? null : mode == "BIN" && expB.hasMatch(number) ? null : () => f(number),
     );
   }
 
-  _clear(String number) {
-    disp = '0';
+  _clear(String s) {
+    setState(() {
+      disp = '0'; 
+    });
+    res = 0;
+  }
+  _delete(String s) {
+    if (disp.length > 1)
+      setState(() {
+        disp = disp.substring(0, disp.length-1);
+      });
+    else 
+      setState(() {
+        disp = '0'; 
+      });
+  }
+  _mode(String s) {
+    setState(() {
+      bColors[mode] = main();
+      bColors[s] = third();
+    });
+    mode = s;
+  }
+  _number(String s) {
+    if (disp == '0')
+      setState(() {
+        disp = s; 
+      });
+    else 
+      setState(() {
+        disp += s; 
+      });
+  }
+  _unary(String s) {
+    if (s == '~')
+      setState(() {
+        disp = (~int.parse(disp)).toString(); 
+      });
+    else 
+      setState(() {
+        disp = (int.parse(disp)+1).toString(); 
+      });
+  }
+  _oper(String s) {
+
   }
 }

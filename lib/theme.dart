@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 
-class CalcTheme {
-  static Color main() => Colors.grey[200];
-  static Color second() => Colors.green;
-  static Color third() => Colors.blue;
-  static Color text() => Colors.black;
-  static Color off() => Color(~CalcTheme.main().value);
+Color main() => Colors.grey[200];
+Color second() => Colors.green;
+Color third() => Colors.yellow;
+Color text() => Colors.black;
+Color off() => Color(~main().value);
 
-  Map<String, Color> bColors = {"mode":third(), '&':second(), '|':second(), '^':second(), };
-}
+Map<String, Color> bColors = {
+  "BIN":main(), "DEC":third(), "HEX":main(), '&':second(), '|':second(), '^':second(), '~':second(), 
+  '++':second(), '%':second(), '÷':second(), '*':second(), '-':second(), '+':second(), '=':second(),
+  "CLR":text(), "DEL":text()
+};
 
 List<String> long = ["CLR", "0", "="];
 List<String> secondC = ['&', '|', '^', '~', "++", '%', '÷', '*', '-','+', '='];
 List<String> offC = ["CLR", "DEL"];
+List<String> dec = ['A','B','C'];
