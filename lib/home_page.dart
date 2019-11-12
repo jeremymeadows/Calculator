@@ -1,5 +1,8 @@
 import 'dart:collection';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:flutter_colorpicker/material_picker.dart';
+import 'package:flutter_colorpicker/block_picker.dart';
 import 'theme.dart';
 
 Size screen;
@@ -10,9 +13,10 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
-  String disp = '0', mode = "DEC";
+  String disp = '0', mode = "DEC", history = '';
   int radix = 10;
   bool op = false;
+  Color pickerCol;
   RegExp expD = RegExp("^[A-F]\$"), expB = RegExp("^[2-9A-F]\$"), ops = RegExp("[&|^~%÷*+-]");
   @override 
   Widget build(BuildContext context) {
@@ -24,29 +28,79 @@ class HomePageState extends State<HomePage> {
       body: Container(
         child: Column(children: <Widget>[
           Row(children: <Widget>[
-            // Container(height: screen.height*.23, child: 
-            // Column(children: <Widget>[
-            //   Container(
-            //     alignment: Alignment.topLeft,
-            //     child: Text("BIN:", style: TextStyle(fontFamily: "Roboto Mono"),),
-            //   ),
-            //   Container(
-            //     alignment: Alignment.topLeft,
-            //     child: Text("DEC:", style: TextStyle(fontFamily: "Roboto Mono"),),
-            //   ),
-            //   Container(
-            //     alignment: Alignment.topLeft,
-            //     child: Text("HEX:", style: TextStyle(fontFamily: "Roboto Mono"),),
-            //   ),
-            // ],),
-            // ),
+            Container(
+              child: PopupMenuButton(
+                //icon: Icon(Icons.menu),
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                  PopupMenuItem<String>(
+                    child: FlatButton(
+                      child: Text("Clear History"),
+                      onPressed: ()=>_clear("HIST"),
+                    ),
+                  ),
+                  // PopupMenuItem(
+                  //   child: FlatButton(
+                  //     child: Text("Theme"),
+                  //     onPressed: ()=>showDialog(
+                  //       context: context,
+                  //       builder: (BuildContext context) {
+                  //         return SimpleDialog(title: Text("Choose Theme"), children: <Widget>[
+                  //           Center(child: RaisedButton(
+                  //             onPressed: (){showDialog(
+                  //               context: context,
+                  //               builder: (BuildContext context) {
+                  //                 return AlertDialog(
+                  //                   content: BlockPicker(
+                  //                     pickerColor: myColor,
+                  //                     onColorChanged: changeColor,
+                  //                   ),
+                  //                 );
+                  //               }
+                  //             );},
+                  //             color: myColor,
+                  //             child: Text("Change me"),
+                  //           ),),
+                  //           Center(child: RaisedButton(
+                  //             onPressed: (){},
+                  //           ),),
+                  //           Center(child: RaisedButton(
+                  //             onPressed: (){},
+                  //           ),),
+                  //         ],);
+                  //       },
+                  //     ),
+                  //   )
+                  // )
+                ],
+              ),
+            ),
             Expanded(
               child: Container(
                 alignment: Alignment.bottomRight,
-                height: screen.height*.23,
-                child: Text('$disp',//BigInt.parse(disp).toRadixString(radix), 
-                  style: TextStyle(fontSize: 50),
-                ),
+                height: screen.height*.15,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  reverse: true,
+                  child: Text(history,
+                    textAlign: TextAlign.right, 
+                    style: TextStyle(fontSize: 25, color: Colors.grey),
+                  ),
+                )
+              ),
+            ),
+          ],),
+          Row(children: <Widget>[
+            Expanded(
+              child: Container(
+                alignment: Alignment.bottomRight,
+                height: screen.height*.08,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  reverse: true,
+                  child: Text('$disp',
+                    style: TextStyle(fontSize: 50),
+                  ),
+                )
               ),
             ),
           ],),
@@ -117,11 +171,17 @@ class HomePageState extends State<HomePage> {
     );
   }
 
+  void changeColor(Color color) => setState(() => myColor = color);
+
   _clear(String s) {
     setState(() {
       disp = '0'; 
     });
     op = false;
+    if (s == "HIST")
+      setState(() {
+        history = ''; 
+      });
   }
   _delete(String s) {
     setState(() {
@@ -183,6 +243,7 @@ class HomePageState extends State<HomePage> {
     op = true;
   }
   _equal(String s) {
+    String eq = disp;
     RegExp exp = RegExp("[0-9A-F]*");
     Queue<BigInt> operand = Queue<BigInt>();
     Queue<String> operate = Queue<String>();
@@ -212,7 +273,8 @@ class HomePageState extends State<HomePage> {
       operand.addLast(eval(x, y, o));
     }
     setState(() {
-      disp = operand.removeLast().toRadixString(radix).toUpperCase(); 
+      disp = operand.removeLast().toRadixString(radix).toUpperCase();
+      history += '\n$eq = $disp';
     });
   }
 }
